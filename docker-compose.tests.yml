@@ -1,0 +1,9 @@
+# Ejecución de tests unitarios + reporte de cobertura en contenedor (no requiere .NET SDK local).
+#   docker compose -f docker-compose.tests.yml run --rm --build tests
+services:
+  tests:
+    build:
+      context: .
+      dockerfile: tests/Dockerfile
+    volumes:
+      - ./coverage:/coverage

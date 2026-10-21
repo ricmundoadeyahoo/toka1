@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Services\Roles\Toka.Roles.Application\Toka.Roles.Application.csproj" />
+  </ItemGroup>
+</Project>

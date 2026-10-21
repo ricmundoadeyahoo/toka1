@@ -1,0 +1,11 @@
+# Override opcional: embeddings con Ollama instalado de forma NATIVA en Windows (sin contenedor ollama).
+#   1) Instala Ollama para Windows y ejecuta:  ollama pull nomic-embed-text
+#   2) docker compose -f docker-compose.yml -f docker-compose.ollama-native.yml up -d --build
+services:
+  ollama:
+    profiles: ["disabled"]
+  ollama-init:
+    profiles: ["disabled"]
+  ai-service:
+    environment:
+      Llm__Embeddings__BaseUrl: http://host.docker.internal:11434/v1

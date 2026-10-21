@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Cobertura con coverlet (XPlat Code Coverage).
+  Alcance medido: capas Domain y Application de cada microservicio + Contracts compartidos,
+  que es donde vive la lógica de negocio (Clean Architecture). Infrastructure/Api son adaptadores
+  cuyo valor se prueba mejor con pruebas de integración (ver Sugerencias: Testcontainers).
+  Se excluye código generado (Regex source generators) y archivos de registro de DI.
+-->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Include>[Toka.*.Domain]*,[Toka.*.Application]*,[Toka.BuildingBlocks.Contracts]*</Include>
+          <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+          <ExcludeByFile>**/DependencyInjection.cs,**/*.g.cs</ExcludeByFile>
+          <SkipAutoProps>true</SkipAutoProps>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

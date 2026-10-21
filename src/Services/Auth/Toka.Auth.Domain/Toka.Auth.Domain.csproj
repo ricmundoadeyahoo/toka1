@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Capa de dominio: sin dependencias externas (ni EF, ni ASP.NET). -->
+</Project>

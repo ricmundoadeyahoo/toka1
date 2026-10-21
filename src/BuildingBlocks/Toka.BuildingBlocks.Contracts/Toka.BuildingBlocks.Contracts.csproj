@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Contratos compartidos SIN dependencias de infraestructura.
+       Lo referencian las capas Application, por eso solo contiene abstracciones y tipos puros. -->
+  <PropertyGroup>
+    <RootNamespace>Toka.BuildingBlocks.Contracts</RootNamespace>
+  </PropertyGroup>
+</Project>

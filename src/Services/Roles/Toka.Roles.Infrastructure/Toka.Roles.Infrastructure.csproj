@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Toka.Roles.Application\Toka.Roles.Application.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Toka.BuildingBlocks.Infrastructure\Toka.BuildingBlocks.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

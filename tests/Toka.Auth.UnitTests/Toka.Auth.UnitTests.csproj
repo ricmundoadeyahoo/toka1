@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Services\Auth\Toka.Auth.Infrastructure\Toka.Auth.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

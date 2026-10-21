@@ -1,0 +1,12 @@
+PASS src/__tests__/client.test.ts
+=============================== Coverage summary ===============================
+Statements   : 73.21% ( 410/560 )
+Branches     : 65.75% ( 169/257 )
+Functions    : 52.45% ( 96/183 )
+Lines        : 74.38% ( 360/484 )
+================================================================================
+Test Suites: 4 passed, 4 total
+Tests:       39 passed, 39 total
+Snapshots:   0 total
+Time:        5.49 s
+Ran all test suites.

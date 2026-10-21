@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\BuildingBlocks\Toka.BuildingBlocks.Infrastructure\Toka.BuildingBlocks.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

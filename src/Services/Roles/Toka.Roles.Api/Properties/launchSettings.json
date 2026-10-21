@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Toka.Roles.Api": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:57564;http://localhost:57567"
+    }
+  }
+}

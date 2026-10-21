@@ -1,0 +1,17 @@
+# Override opcional: embeddings con OpenAI (text-embedding-3-small) en lugar de Ollama local.
+# Requiere OPENAI_API_KEY en .env. Al cambiar de modelo de embeddings, la colección de Qdrant se recrea
+# automáticamente (otra dimensión) y se reindexa al arrancar.
+#   docker compose -f docker-compose.yml -f docker-compose.openai-embeddings.yml up -d --build
+services:
+  ollama:
+    profiles: ["disabled"]
+  ollama-init:
+    profiles: ["disabled"]
+  ai-service:
+    environment:
+      Llm__Embeddings__BaseUrl: https://api.openai.com/v1
+      Llm__Embeddings__ApiKey: ${OPENAI_API_KEY:?Define OPENAI_API_KEY en .env}
+      Llm__Embeddings__Model: text-embedding-3-small
+      Agent__Pricing__EmbeddingPerMillionUsd: "0.02"
+      Agent__DocumentPrefix: ""
+      Agent__QueryPrefix: ""

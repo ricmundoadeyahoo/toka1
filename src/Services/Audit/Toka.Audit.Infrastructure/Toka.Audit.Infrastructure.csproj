@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Toka.Audit.Application\Toka.Audit.Application.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Toka.BuildingBlocks.Infrastructure\Toka.BuildingBlocks.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

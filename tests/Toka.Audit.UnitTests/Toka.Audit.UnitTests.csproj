@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Services\Audit\Toka.Audit.Application\Toka.Audit.Application.csproj" />
+  </ItemGroup>
+</Project>

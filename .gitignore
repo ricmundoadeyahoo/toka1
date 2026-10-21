@@ -1,0 +1,15 @@
+bin/
+obj/
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+TestResults/
+/coverage/
+node_modules/
+frontend/dist/
+frontend/coverage/
+.env
+*.pem
+frontend/coverage-summary.txt

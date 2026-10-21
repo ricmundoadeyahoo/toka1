@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="..\Toka.Roles.Infrastructure\Toka.Roles.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

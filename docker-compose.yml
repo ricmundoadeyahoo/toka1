@@ -1,0 +1,247 @@
+# =====================================================================================
+#  Toka · Sistema de gestión de usuarios con microservicios + agente de IA (RAG local)
+#  Uso:  copia .env.example a .env, pon tu LLM_API_KEY (DeepSeek) y ejecuta: docker compose up -d --build
+#  UI:   http://localhost:3000   ·  Gateway: http://localhost:5000
+#  Variables opcionales en .env (ver .env.example). Todos los valores tienen default local.
+# =====================================================================================
+name: toka
+
+x-dotnet-common: &dotnet-common
+  restart: unless-stopped
+  networks: [toka]
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+x-dotnet-env: &dotnet-env
+  ASPNETCORE_ENVIRONMENT: Development            # habilita Swagger en /swagger
+  Logging__SeqUrl: http://seq:5341               # logs centralizados
+  ConnectionStrings__Redis: redis:6379
+  RabbitMq__Host: rabbitmq
+  RabbitMq__UserName: ${RABBITMQ_USER:-toka}
+  RabbitMq__Password: ${RABBITMQ_PASSWORD:-toka_dev_password}
+  Jwt__Issuer: http://auth-service:8080
+  Jwt__Authority: http://auth-service:8080
+  Jwt__Audience: toka-api
+
+x-infra-ready: &infra-ready
+  postgres: { condition: service_healthy }
+  redis: { condition: service_healthy }
+  rabbitmq: { condition: service_healthy }
+
+services:
+  # ------------------------------------------------------------------ Infraestructura
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: toka
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-toka_dev_password}
+      POSTGRES_DB: postgres
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    ports: ["${POSTGRES_PORT:-5432}:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U toka"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [toka]
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes: [mongo-data:/data/db]
+    ports: ["${MONGO_PORT:-27017}:27017"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks: [toka]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes: [redis-data:/data]
+    ports: ["${REDIS_PORT:-6379}:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [toka]
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-toka}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-toka_dev_password}
+    volumes: [rabbitmq-data:/var/lib/rabbitmq]
+    ports: ["5672:5672", "${RABBITMQ_UI_PORT:-15672}:15672"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+    networks: [toka]
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    restart: unless-stopped
+    volumes: [qdrant-data:/qdrant/storage]
+    ports: ["${QDRANT_PORT:-6333}:6333"]
+    networks: [toka]
+
+  # Embeddings para el RAG (DeepSeek no ofrece API de embeddings). Modelo pequeño (~270 MB) que corre bien en CPU.
+  # Alternativas: docker-compose.openai-embeddings.yml (OpenAI) o docker-compose.ollama-native.yml (Ollama de Windows).
+  ollama:
+    image: ollama/ollama:${OLLAMA_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      OLLAMA_KEEP_ALIVE: "30m"        # mantiene el modelo de embeddings en memoria
+      OLLAMA_NUM_PARALLEL: "4"
+    volumes: [ollama-models:/root/.ollama]
+    ports: ["${OLLAMA_PORT:-11434}:11434"]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    networks: [toka]
+
+  ollama-init:   # descarga el modelo de embeddings una sola vez (queda en el volumen ollama-models)
+    image: ollama/ollama:${OLLAMA_IMAGE_TAG:-latest}
+    depends_on:
+      ollama: { condition: service_healthy }
+    environment:
+      OLLAMA_HOST: ollama:11434
+    entrypoint: ["/bin/sh", "-c", "ollama pull ${EMBEDDING_MODEL:-nomic-embed-text} && echo 'Modelo de embeddings listo'"]
+    restart: "no"
+    networks: [toka]
+
+  seq:   # Logs centralizados (UI en http://localhost:5341)
+    image: datalust/seq:2024.3
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
+    volumes: [seq-data:/data]
+    ports: ["${SEQ_PORT:-5341}:80"]
+    networks: [toka]
+
+  # ------------------------------------------------------------------ Microservicios
+  auth-service:
+    <<: *dotnet-common
+    build: { context: ., dockerfile: src/Services/Auth/Dockerfile }
+    image: toka/auth-service:local
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__AuthDb: Host=postgres;Port=5432;Database=auth_db;Username=toka;Password=${POSTGRES_PASSWORD:-toka_dev_password}
+      Services__RoleService: http://role-service:8080
+      Seed__AdminPassword: ${ADMIN_PASSWORD:-Admin123!}
+      SigningKey__Path: /keys/signing-key.pem
+    volumes: [auth-keys:/keys]
+    depends_on: *infra-ready
+    ports: ["5001:8080"]
+
+  user-service:
+    <<: *dotnet-common
+    build: { context: ., dockerfile: src/Services/User/Dockerfile }
+    image: toka/user-service:local
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__UsersDb: Host=postgres;Port=5432;Database=users_db;Username=toka;Password=${POSTGRES_PASSWORD:-toka_dev_password}
+    depends_on: *infra-ready
+    ports: ["5002:8080"]
+
+  role-service:
+    <<: *dotnet-common
+    build: { context: ., dockerfile: src/Services/Roles/Dockerfile }
+    image: toka/role-service:local
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__RolesDb: Host=postgres;Port=5432;Database=roles_db;Username=toka;Password=${POSTGRES_PASSWORD:-toka_dev_password}
+    depends_on: *infra-ready
+    ports: ["5003:8080"]
+
+  audit-service:
+    <<: *dotnet-common
+    build: { context: ., dockerfile: src/Services/Audit/Dockerfile }
+    image: toka/audit-service:local
+    environment:
+      <<: *dotnet-env
+      Mongo__ConnectionString: mongodb://mongo:27017
+      Mongo__Database: audit_db
+    depends_on:
+      <<: *infra-ready
+      mongo: { condition: service_healthy }
+    ports: ["5004:8080"]
+
+  ai-service:
+    <<: *dotnet-common
+    build: { context: ., dockerfile: src/Services/Ai/Dockerfile }
+    image: toka/ai-service:local
+    environment:
+      <<: *dotnet-env
+      # Chat / function calling: DeepSeek (API compatible con OpenAI). Cambiar a OpenAI = cambiar estas 3 variables.
+      Llm__Chat__BaseUrl: ${LLM_BASE_URL:-https://api.deepseek.com}
+      Llm__Chat__ApiKey: ${LLM_API_KEY:-}
+      Llm__Chat__Model: ${CHAT_MODEL:-deepseek-flash}
+      Llm__Chat__ExtraBodyJson: ${LLM_EXTRA_BODY_JSON:-}   # vacío = automático (desactiva "thinking" en DeepSeek)
+      # Embeddings del RAG
+      Llm__Embeddings__BaseUrl: ${EMBEDDINGS_BASE_URL:-http://ollama:11434/v1}
+      Llm__Embeddings__ApiKey: ${EMBEDDINGS_API_KEY:-ollama}
+      Llm__Embeddings__Model: ${EMBEDDING_MODEL:-nomic-embed-text}
+      # Precios reales (USD por millón de tokens) para el cálculo de costos — tarifa pico de deepseek-flash por defecto
+      Agent__Pricing__Name: ${PRICE_NAME:-deepseek-flash (tarifa pico)}
+      Agent__Pricing__InputPerMillionUsd: ${PRICE_INPUT_PER_M:-0.30}
+      Agent__Pricing__CachedInputPerMillionUsd: ${PRICE_CACHED_INPUT_PER_M:-0.006}
+      Agent__Pricing__OutputPerMillionUsd: ${PRICE_OUTPUT_PER_M:-1.20}
+      Agent__Pricing__EmbeddingPerMillionUsd: ${PRICE_EMBEDDING_PER_M:-0}
+      Qdrant__BaseUrl: http://qdrant:6333
+      Mongo__ConnectionString: mongodb://mongo:27017
+      Mongo__Database: ai_db
+      Services__UserService: http://user-service:8080
+      Services__RoleService: http://role-service:8080
+      Services__AuditService: http://audit-service:8080
+    depends_on:
+      <<: *infra-ready
+      mongo: { condition: service_healthy }
+      qdrant: { condition: service_started }
+      ollama-init: { condition: service_completed_successfully, required: false }
+    extra_hosts: ["host.docker.internal:host-gateway"]   # para Ollama nativo de Windows (embeddings)
+    ports: ["5005:8080"]
+
+  api-gateway:
+    <<: *dotnet-common
+    build: { context: ., dockerfile: src/Gateway/Dockerfile }
+    image: toka/api-gateway:local
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Logging__SeqUrl: http://seq:5341
+    depends_on: [auth-service, user-service, role-service, audit-service, ai-service]
+    ports: ["${GATEWAY_PORT:-5000}:8080"]
+
+  frontend:
+    build: { context: ./frontend }
+    image: toka/frontend:local
+    restart: unless-stopped
+    depends_on: [api-gateway]
+    ports: ["${FRONTEND_PORT:-3000}:8080"]
+    networks: [toka]
+
+networks:
+  toka:
+    name: toka-net
+
+volumes:
+  postgres-data:
+  mongo-data:
+  redis-data:
+  rabbitmq-data:
+  qdrant-data:
+  ollama-models:
+  seq-data:
+  auth-keys:

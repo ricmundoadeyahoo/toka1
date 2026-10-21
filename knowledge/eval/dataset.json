@@ -1,0 +1,10 @@
+[
+  { "question": "¿Cuántos intentos fallidos se permiten antes de bloquear una cuenta?", "expectedKeywords": ["5", "15 minutos"] },
+  { "question": "¿Qué requisitos debe cumplir una contraseña?", "expectedKeywords": ["8", "mayúscula", "minúscula", "dígito", "especial"] },
+  { "question": "¿Qué rol se asigna automáticamente al registrarse?", "expectedKeywords": ["User"] },
+  { "question": "¿Cuánto dura el token de acceso?", "expectedKeywords": ["15 minutos"] },
+  { "question": "¿Qué permisos tiene el rol Auditor?", "expectedKeywords": ["lectura", "auditoría"] },
+  { "question": "¿Cuánto tiempo se conservan los registros de auditoría?", "expectedKeywords": ["365"] },
+  { "question": "Me asignaron un rol nuevo y no veo los cambios, ¿qué hago?", "expectedKeywords": ["sesión", "token"] },
+  { "question": "¿Cuál es el salario promedio de los empleados?", "expectedKeywords": ["no tengo información"] }
+]

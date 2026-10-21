@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Toka.Roles.Domain\Toka.Roles.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Toka.BuildingBlocks.Contracts\Toka.BuildingBlocks.Contracts.csproj" />
+  </ItemGroup>
+</Project>
