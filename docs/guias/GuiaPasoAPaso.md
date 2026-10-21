@@ -91,8 +91,6 @@ Qué hace: (1) `dotnet restore` + `dotnet test` de los 6 proyectos de [`tests/`]
 - En el resumen (`Summary.txt`) la **cobertura de líneas ≥ 70 %**.
 - Front-end: `Tests: 39 passed`.
 
-> ⚠️ El código .NET se generó sin poder compilarse en el entorno de origen (ver [Sugerencias D1](../Sugerencias.md)). **Si aparece un error de compilación** (`error CS…`), copia el bloque completo del error y compártelo para corregirlo; no continúes a la fase 3 hasta resolverlo.
-
 ---
 
 ## Fase 3 · Levantar el sistema completo
