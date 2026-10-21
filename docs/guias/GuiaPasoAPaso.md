@@ -28,7 +28,7 @@
 | RAM asignada a WSL 2 | 6 GB (el LLM corre en DeepSeek; localmente solo el modelo de embeddings, ~270 MB) |
 | Disco libre | 10 GB |
 | Salida a internet desde Docker | hacia `api.deepseek.com`, `mcr.microsoft.com`, Docker Hub, npm y NuGet |
-| Cuenta de **DeepSeek** con saldo | https://platform.deepseek.com |
+| Cuenta de **DeepSeek** or **OpenAI** con saldo | https://platform.deepseek.com - I use deepseek for testing purposes|
 
 **0.1 Verifica Docker**
 
